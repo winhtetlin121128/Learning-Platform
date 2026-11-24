@@ -4,18 +4,18 @@ A student opportunity platform built with Next.js App Router, TypeScript, Tailwi
 
 ## Setup
 
-Use Node.js 20.9 or newer. Create an AWS-region Neon project, enable Managed Auth on its branch, then copy the pooled Postgres connection URL and Auth base URL from the Neon Console.
+Use Node.js 20.9 or newer. Create an AWS-region Neon project, enable Managed Auth on its branch, then copy the pooled Postgres URL, direct Postgres URL, and Auth base URL from the Neon Console.
 
 ```bash
 npm install
 cp .env.example .env.local
-# Set DATABASE_URL, NEON_AUTH_BASE_URL, and a unique NEON_AUTH_COOKIE_SECRET
+# Set DATABASE_URL, DATABASE_URL_UNPOOLED, NEON_AUTH_BASE_URL, and NEON_AUTH_COOKIE_SECRET
 npx drizzle-kit push
 npm run db:seed
 npm run dev
 ```
 
-In PowerShell, use `Copy-Item .env.example .env.local` instead of `cp`. Open http://localhost:3000. For continuing environments, use `npm run db:generate` then `npm run db:migrate` with a direct (unpooled) migration connection URL.
+In PowerShell, use `Copy-Item .env.example .env.local` instead of `cp`. Open http://localhost:3000. Drizzle uses the direct connection for schema changes and falls back to `DATABASE_URL` if no direct URL is set. For ongoing environments, use `npm run db:generate` then `npm run db:migrate`.
 
 Neon Managed Auth is available in AWS regions and cannot be enabled on a project using IP Allow or Private Networking. Add `http://localhost:3000` as a trusted domain in Neon Auth before signing in.
 
