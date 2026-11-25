@@ -23,9 +23,10 @@ export async function togglePostAction(postId:string,kind:"saved"|"applied"){
  if(existing)await db.delete(userPostActions).where(eq(userPostActions.id,existing.id));else await db.insert(userPostActions).values({userId:profile.id,postId,actionType:kind}).onConflictDoNothing();
  revalidatePath("/");revalidatePath("/profile");return{active:!existing};
 }
+function dateKeyInYangon(date=new Date()){const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Yangon",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(date);const get=(type:string)=>parts.find(part=>part.type===type)?.value??"";return `${get("year")}-${get("month")}-${get("day")}`}
 export async function checkInToday(){
  const u=await currentUser(),profile=await ensureProfile(u),db=getDb();
- const today=new Date().toISOString().slice(0,10),yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+ const today=dateKeyInYangon(),yesterday=dateKeyInYangon(new Date(Date.now()-86400000));
  const result=await db.execute(sql`UPDATE users SET
  current_streak=CASE WHEN checkin_history @> jsonb_build_array(${yesterday}) THEN current_streak+1 ELSE 1 END,
  last_checkin_at=now(),checkin_history=checkin_history || jsonb_build_array(${today})
