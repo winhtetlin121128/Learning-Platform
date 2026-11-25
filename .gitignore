@@ -6,3 +6,4 @@ out
 !.env.example
 drizzle/meta
 *.tsbuildinfo
+.neon
