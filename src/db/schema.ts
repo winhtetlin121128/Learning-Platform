@@ -5,7 +5,9 @@ export const actionEnum=pgEnum("post_action_type",["saved","applied"]);
 export const users=pgTable("users",{
  id:text("id").primaryKey(),name:text("name").notNull(),email:text("email").notNull().unique(),
  role:roleEnum("role").notNull().default("student"),university:text("university").notNull().default(""),
- major:text("major").notNull().default(""),currentStreak:integer("current_streak").notNull().default(0),
+ major:text("major").notNull().default(""),
+ avatarData:text("avatar_data"),hobbies:jsonb("hobbies").$type<string[]>().notNull().default([]),
+ currentStreak:integer("current_streak").notNull().default(0),
  lastCheckinAt:timestamp("last_checkin_at",{withTimezone:true}),
  checkinHistory:jsonb("checkin_history").$type<string[]>().notNull().default([]),
  createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()
