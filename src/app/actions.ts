@@ -41,7 +41,10 @@ export async function updateProfile(formData:FormData){
  const u=await currentUser(),profile=await ensureProfile(u);
  const university=z.string().trim().max(160).parse(formData.get("university")??"");
  const major=z.string().trim().max(160).parse(formData.get("major")??"");
- await getDb().update(users).set({university,major}).where(eq(users.id,profile.id));revalidatePath("/profile");
+ const avatarData=z.string().max(70000).parse(formData.get("avatarData")??"");
+ const hobbies=z.array(z.string().trim().min(1).max(50)).max(12).parse(JSON.parse(String(formData.get("hobbies")??"[]")));
+ if(avatarData&&!/^data:image\/(png|jpeg|webp);base64,/.test(avatarData))throw new Error("Upload a PNG, JPG, or WebP profile picture.");
+ await getDb().update(users).set({university,major,avatarData:avatarData||null,hobbies}).where(eq(users.id,profile.id));revalidatePath("/profile");
 }
 const postInput=z.object({title:z.string().trim().min(5).max(120),category:z.enum(["announcement","hackathon","webinar","event","meetup","internship","volunteer"]),summary:z.string().trim().min(15).max(800),organization:z.string().trim().min(2).max(120),locationOrLink:z.string().trim().max(200),eventDate:z.string().optional(),deadline:z.string().optional(),isPinned:z.boolean()});
 export async function publishPost(formData:FormData){
