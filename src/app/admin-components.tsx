@@ -50,7 +50,7 @@ function AdminPostEditor({ post, onClose }: { post: Listing; onClose: (saved?: b
       <label className="checkbox-label"><input type="checkbox" name="isPinned" defaultChecked={post.isPinned}/> Pin announcement</label>
     </div>
     {message && <div className="error">{message}</div>}
-    <div className="admin-edit-actions"><button className="button" disabled={busy}>{busy ? "Saving…" : "Save changes"}</button><button type="button" className="button secondary" onClick={onClose}><X size={13}/> Cancel</button></div>
+    <div className="admin-edit-actions"><button className="button" disabled={busy}>{busy ? "Saving…" : "Save changes"}</button><button type="button" className="button secondary" onClick={() => onClose()}><X size={13}/> Cancel</button></div>
   </form>;
 }
 
