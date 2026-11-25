@@ -42,16 +42,30 @@ export async function updateProfile(formData:FormData){
  const major=z.string().trim().max(160).parse(formData.get("major")??"");
  await getDb().update(users).set({university,major}).where(eq(users.id,profile.id));revalidatePath("/profile");
 }
-const postInput=z.object({title:z.string().trim().min(5).max(120),category:z.enum(["announcement","webinar","meetup","internship","volunteer"]),summary:z.string().trim().min(15).max(800),organization:z.string().trim().min(2).max(120),locationOrLink:z.string().trim().max(200),eventDate:z.string().optional(),deadline:z.string().optional(),isPinned:z.boolean()});
+const postInput=z.object({title:z.string().trim().min(5).max(120),category:z.enum(["announcement","hackathon","webinar","event","meetup","internship","volunteer"]),summary:z.string().trim().min(15).max(800),organization:z.string().trim().min(2).max(120),locationOrLink:z.string().trim().max(200),eventDate:z.string().optional(),deadline:z.string().optional(),isPinned:z.boolean()});
 export async function publishPost(formData:FormData){
  const u=await currentUser(),p=await ensureProfile(u);if(p.role!=="admin")throw new Error("Admin access required.");
  const v=postInput.parse({title:formData.get("title"),category:formData.get("category"),summary:formData.get("summary"),organization:formData.get("organization"),locationOrLink:formData.get("locationOrLink"),eventDate:formData.get("eventDate")||undefined,deadline:formData.get("deadline")||undefined,isPinned:formData.get("isPinned")==="on"});
  if(v.isPinned&&v.category!=="announcement")throw new Error("Only announcements can be pinned.");
- await getDb().insert(posts).values({...v,eventDate:v.eventDate||null,deadline:v.deadline||null,createdBy:p.id});revalidatePath("/");revalidatePath("/admin");
+ await getDb().insert(posts).values({...v,eventDate:v.eventDate||null,deadline:v.deadline||null,createdBy:p.id});revalidatePath("/");revalidatePath("/admin");revalidatePath("/admin/posts");
+}
+export async function updatePost(formData:FormData){
+ const u=await currentUser(),p=await ensureProfile(u);if(p.role!=="admin")throw new Error("Admin access required.");
+ const id=z.string().min(1).max(128).parse(formData.get("postId"));
+ const v=postInput.parse({title:formData.get("title"),category:formData.get("category"),summary:formData.get("summary"),organization:formData.get("organization"),locationOrLink:formData.get("locationOrLink"),eventDate:formData.get("eventDate")||undefined,deadline:formData.get("deadline")||undefined,isPinned:formData.get("isPinned")==="on"});
+ if(v.isPinned&&v.category!=="announcement")throw new Error("Only announcements can be pinned.");
+ await getDb().update(posts).set({...v,eventDate:v.eventDate||null,deadline:v.deadline||null}).where(eq(posts.id,id));
+ revalidatePath("/");revalidatePath("/admin");revalidatePath("/admin/posts");
 }
 export async function deletePost(id:string){
  const u=await currentUser(),p=await ensureProfile(u);if(p.role!=="admin")throw new Error("Admin access required.");
- await getDb().delete(posts).where(eq(posts.id,id));revalidatePath("/");revalidatePath("/admin");
+ await getDb().delete(posts).where(eq(posts.id,id));revalidatePath("/");revalidatePath("/admin");revalidatePath("/admin/posts");
+}
+export async function updateUserRole(userId:string,role:"student"|"admin"){
+ const u=await currentUser(),p=await ensureProfile(u);if(p.role!=="admin")throw new Error("Admin access required.");
+ const id=z.string().min(1).max(128).parse(userId),nextRole=z.enum(["student","admin"]).parse(role);
+ if(id===u.id)throw new Error("You cannot change your own role.");
+ await getDb().update(users).set({role:nextRole}).where(eq(users.id,id));revalidatePath("/admin");revalidatePath("/admin/users");
 }
 export async function removeAction(id:string){
  const u=await currentUser(),p=await ensureProfile(u);

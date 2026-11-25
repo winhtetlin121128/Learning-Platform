@@ -1,6 +1,6 @@
 import { boolean, date, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid, uniqueIndex } from "drizzle-orm/pg-core";
 export const roleEnum=pgEnum("user_role",["student","admin"]);
-export const categoryEnum=pgEnum("post_category",["announcement","webinar","meetup","internship","volunteer"]);
+export const categoryEnum=pgEnum("post_category",["announcement","hackathon","webinar","event","meetup","internship","volunteer"]);
 export const actionEnum=pgEnum("post_action_type",["saved","applied"]);
 export const users=pgTable("users",{
  id:text("id").primaryKey(),name:text("name").notNull(),email:text("email").notNull().unique(),

@@ -1,14 +1,14 @@
-import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
-import { getDb } from "@/db";
-import { users } from "@/db/schema";
-import { getAdminData,getViewer } from "@/lib/data";
-import { AdminPostForm,AdminTable } from "@/app/admin-components";
-export const dynamic="force-dynamic";
-export default async function AdminPage(){
- const u=await getViewer();if(!u)redirect("/auth/sign-in");
- if(!process.env.DATABASE_URL)return <main className="dashboard"><div className="eyebrow"><i/>Administration</div><h1 className="page-title">The admin desk.</h1><p className="muted">Add DATABASE_URL, push the schema, and make an admin profile with the bootstrap code to manage listings.</p></main>;
- const db=getDb(),[me]=await db.select().from(users).where(eq(users.id,u.id)).limit(1);if(!me||me.role!=="admin")redirect("/profile");
- const{people,listings,applicationCount}=await getAdminData();
- return <main className="dashboard"><div className="dashboard-top"><div><div className="eyebrow"><i/>Nexus operations</div><h1>The admin desk.</h1><p className="muted">A clear view of what’s growing in the community.</p></div><span className="mono muted">SIGNED IN AS {u.email}</span></div><div className="kpis"><div className="kpi"><strong>{people.length}</strong><span>Total users</span></div><div className="kpi"><strong>{listings.length}</strong><span>Active listings</span></div><div className="kpi"><strong>{applicationCount}</strong><span>Applications</span></div><div className="kpi"><strong>{listings.filter(p=>p.isPinned).length}</strong><span>Pinned posts</span></div></div><div className="admin-grid"><section className="panel"><h2 className="panel-title">Publish a listing</h2><AdminPostForm/></section><div><AdminTable listings={listings.map(p=>({...p,locationOrLink:p.locationOrLink??""}))} people={people}/></div></div></main>;
+import Link from "next/link";
+import { getAdminData } from "@/lib/data";
+
+export default async function AdminOverviewPage() {
+  const { people, listings, applicationCount } = await getAdminData();
+  return <div className="admin-page">
+    <header className="dashboard-top admin-heading" id="overview"><div><div className="eyebrow"><i/>Nexus operations</div><h1>The admin desk.</h1><p className="muted">A quick overview of posts, users, and activity.</p></div></header>
+    <div className="kpis"><div className="kpi"><strong>{people.length}</strong><span>Total users</span></div><div className="kpi"><strong>{listings.length}</strong><span>Total posts</span></div><div className="kpi"><strong>{applicationCount}</strong><span>Applications</span></div><div className="kpi"><strong>{listings.filter(p => p.isPinned).length}</strong><span>Pinned posts</span></div></div>
+    <div className="admin-quick-links"><Link href="/admin/posts" className="panel admin-quick-card"><span className="eyebrow">POST MANAGEMENT</span><strong>Manage posts ↗</strong><span className="muted">Create, edit, and remove home page listings.</span></Link><Link href="/admin/users" className="panel admin-quick-card"><span className="eyebrow">USER MANAGEMENT</span><strong>Manage users ↗</strong><span className="muted">Review accounts and update student or admin access.</span></Link></div>
+    <section className="panel admin-recent"><div className="admin-section-head"><div><h2 className="panel-title">Recent posts</h2><p className="muted">Latest listings in the database.</p></div><Link href="/admin/posts" className="admin-text-link">View all posts ↗</Link></div>
+      <div className="admin-recent-list">{listings.slice(0, 5).map(post => <div className="admin-recent-row" key={post.id}><div><strong>{post.title}</strong><span>{post.organization} · {post.category}</span></div><span className="mono muted">{post.deadline ?? post.eventDate ?? "OPEN"}</span></div>)}{listings.length === 0 && <p className="muted">No posts yet. Add your first one from the Posts page.</p>}</div>
+    </section>
+  </div>;
 }

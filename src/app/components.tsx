@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { ArrowUpRight,Bookmark,Check,LoaderCircle,Search } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { syncProfile,togglePostAction } from "./actions";
-const categories=["all","announcement","webinar","meetup","internship","volunteer"];
+const categories=["all","announcement","hackathon","webinar","event","meetup","internship","volunteer"];
 type Post={id:string;title:string;category:string;summary:string;organization:string;locationOrLink:string;eventDate:string|null;deadline:string|null;isPinned:boolean;saved:boolean;applied:boolean};
 const pretty=(s:string)=>s.charAt(0).toUpperCase()+s.slice(1);
 const dateLabel=(s:string|null)=>s?new Date(s+"T12:00:00").toLocaleDateString("en",{month:"short",day:"numeric"}):"Open";
