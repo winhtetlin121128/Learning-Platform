@@ -11,14 +11,23 @@ export const demoPosts=[
 {id:"00000000-0000-4000-8000-000000000005",title:"Volunteer tutors for the next cohort",category:"volunteer" as const,summary:"Support high-school learners with a weekly hour of practical maths, writing, or digital skills mentoring.",organization:"Open Door Learning",locationOrLink:"Online or in person",eventDate:null,deadline:"2026-12-22",isPinned:false,createdBy:"demo",createdAt:new Date()}
 ];
 export async function getViewer(){const{data}=await auth.getSession();return data?.user??null}
-export async function getHomeData(viewerId?:string){
- if(!process.env.DATABASE_URL)return{posts:demoPosts,stats:{users:1248,active:86,upcoming:12},actions:[] as {postId:string;actionType:"saved"|"applied"}[]};
+const fallbackHomeData={posts:demoPosts,stats:{users:1248,active:86,upcoming:12},actions:[] as {postId:string;actionType:"saved"|"applied"}[]};
+export async function getPublicListings(){
+ if(!process.env.DATABASE_URL)return demoPosts;
  try{
- const db=getDb(),allPosts=await db.select().from(posts).orderBy(desc(posts.isPinned),desc(posts.createdAt)),people=await db.select({id:users.id}).from(users),today=new Date().toISOString().slice(0,10);
- const livePosts=allPosts.filter(p=>{const end=p.deadline??p.eventDate;return !end||end>=today});
- const actions=viewerId?await db.select({postId:userPostActions.postId,actionType:userPostActions.actionType}).from(userPostActions).where(eq(userPostActions.userId,viewerId)):[];
- return{posts:livePosts,stats:{users:people.length,active:livePosts.length,upcoming:livePosts.filter(p=>p.eventDate&&p.eventDate>=today).length},actions};
- }catch{return{posts:demoPosts,stats:{users:1248,active:86,upcoming:12},actions:[] as {postId:string;actionType:"saved"|"applied"}[]}}
+  const allPosts=await getDb().select().from(posts).orderBy(desc(posts.isPinned),desc(posts.createdAt));
+  const today=new Date().toISOString().slice(0,10);
+  return allPosts.filter(post=>{const end=post.deadline??post.eventDate;return !end||end>=today});
+ }catch{return demoPosts}
+}
+export async function getHomeData(viewerId?:string){
+ if(!process.env.DATABASE_URL)return fallbackHomeData;
+ const livePosts=await getPublicListings(),db=getDb(),today=new Date().toISOString().slice(0,10);
+ const [people,actions]=await Promise.all([
+  db.select({id:users.id}).from(users).catch(()=>null),
+  viewerId?db.select({postId:userPostActions.postId,actionType:userPostActions.actionType}).from(userPostActions).where(eq(userPostActions.userId,viewerId)).catch(()=>[]):Promise.resolve([])
+ ]);
+ return{posts:livePosts,stats:{users:people?.length??fallbackHomeData.stats.users,active:livePosts.length,upcoming:livePosts.filter(post=>post.eventDate&&post.eventDate>=today).length},actions};
 }
 export async function getProfileData(id:string){
  const db=getDb(),[viewer]=await db.select().from(users).where(eq(users.id,id)).limit(1);if(!viewer)return null;
